@@ -198,7 +198,7 @@ class NumberScript(Script):
             else:
                 logger.warning(f"[GET] Database error: status {response.status_code}")
         except Exception as e:
-            logger.warning(f"[GET] Database error: {e}")
+            logger.warning(f"[GET] Database error: {repr(e)}")
         return None
 
     async def add_to_database(
@@ -220,7 +220,7 @@ class NumberScript(Script):
             if response.status_code != 200:
                 logger.error(f"[ADD] Database add error: {response.text}")
         except Exception as e:
-            logger.error(f"[ADD] Database error: {e}")
+            logger.error(f"[ADD] Database error: {repr(e)}")
 
     @override
     class Result(BaseModel):

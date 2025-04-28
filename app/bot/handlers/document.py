@@ -49,7 +49,7 @@ async def document(message: Message, file: Document):
         # Отправка обработанного файла
         try:
             await message.answer_document(
-                FSInputFile(temp_file_path, filename=f"processed_{file.file_name}"),
+                FSInputFile(temp_file_path, filename=file.file_name),
                 caption=f"✅ Обработанный файл готов!\n🔍 Запросов на Химеру: {result.himera_api_reqs} ({result.tokens_taken})\n💾 С базы: {result.base_hits}",
             )
         except Exception as e:
