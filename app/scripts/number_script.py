@@ -9,6 +9,9 @@ from typing import override
 from pydantic import BaseModel
 from functools import lru_cache
 from loguru import logger
+import sys
+
+logger.add(sink=sys.stdout, format="{time:HH:mm:ss} / {level} / {message}")
 
 
 class NumberScript(Script):
@@ -88,7 +91,9 @@ class NumberScript(Script):
                         json=payload,
                     )
                     self.himera_request_count += 1
-                    logger.debug("Himera API request")  # Increment Himera request counter
+                    logger.debug(
+                        "Himera API request"
+                    )  # Increment Himera request counter
                     if response.status_code == 200:
                         return response.json()
             except Exception:
@@ -115,7 +120,7 @@ class NumberScript(Script):
             lastname, firstname, middlename, birthday
         )
         if "error" in response_data:
-            return f"Ошибка: {response_data['error']}"
+            return f"Error: {response_data['error']}"
 
         await self.add_to_database(
             lastname, firstname, middlename, birthday, response_data
@@ -194,9 +199,9 @@ class NumberScript(Script):
                 data: dict = response.json()
                 return data.get("finance")
             else:
-                logger.warning(f"Ошибка запроса к базе: статус {response.status_code}")
+                logger.warning(f"[GET] Database error: status {response.status_code}")
         except Exception as e:
-            logger.warning(f"Ошибка при запросе к базе: {e}")
+            logger.warning(f"[GET] Database error: {e}")
         return None
 
     async def add_to_database(
@@ -216,9 +221,9 @@ class NumberScript(Script):
                 json=finance_full,
             )
             if response.status_code != 200:
-                logger.error(f"Ошибка при отправке: {response.text}")
+                logger.error(f"[ADD] Database add error: {response.text}")
         except Exception as e:
-            logger.error(f"Ошибка при отправке в базу: {e}")
+            logger.error(f"[ADD] Database error: {e}")
 
     @override
     class Result(BaseModel):
