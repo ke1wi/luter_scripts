@@ -172,12 +172,12 @@ class NumberScript(Script):
 
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
-                    content = await f.read()
+                    content = f.read()
 
                 processed_content = await self.process_file_content(content)
 
                 with open(file_path, "w", encoding="utf-8") as f:
-                    await f.write(processed_content)
+                    f.write(processed_content)
 
                 return processed_content
             except IOError as e:

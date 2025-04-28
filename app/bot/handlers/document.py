@@ -59,10 +59,12 @@ async def document(message: Message, file: Document):
         except Exception as e:
             logger.error(f"File sending error: {e}")
             await message.answer("⚠️ Не удалось отправить обработанный файл.")
+            return
 
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         await message.answer("❌ Произошла непредвиденная ошибка. Попробуйте позже.")
+        return
     finally:
         # Удаление временного файла
         if temp_file_path and os.path.exists(temp_file_path):
