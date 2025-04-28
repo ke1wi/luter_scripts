@@ -9,9 +9,6 @@ from typing import override
 from pydantic import BaseModel
 from functools import lru_cache
 from loguru import logger
-import sys
-
-logger.add(sink=sys.stdout, format="{time:HH:mm:ss} / {level} / {message}")
 
 
 class NumberScript(Script):
