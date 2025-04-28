@@ -10,13 +10,18 @@ from pydantic import BaseModel
 from loguru import logger
 from contextlib import asynccontextmanager
 from aiofiles import open as aioopen
+from app.exceptions.database import DatabaseException
+from httpx import PoolTimeout
 
 
 class NumberScript(Script):
     def __init__(self):
         self.himera_client = httpx.AsyncClient(timeout=httpx.Timeout(10.0))
         self.server_client = httpx.AsyncClient(timeout=httpx.Timeout(10.0))
-        self.rate_limiter = AsyncLimiter(max_rate=10, time_period=1)
+        self.himera_limiter = AsyncLimiter(max_rate=10, time_period=1)
+
+        self.get_semaphore = asyncio.Semaphore(50)
+        self.add_semaphore = asyncio.Semaphore(10)
 
         # Load settings once
         self.HIMERA_USERNAME = settings.HIMERA_USERNAME.get_secret_value()
@@ -90,7 +95,7 @@ class NumberScript(Script):
         last_exception = None
         for attempt in range(max_attempts):
             try:
-                async with self.rate_limiter:
+                async with self.himera_limiter:
                     response = await self.himera_client.post(
                         self.API_FINANCE_URL,
                         headers=headers,
@@ -112,11 +117,16 @@ class NumberScript(Script):
         }
 
     async def process_record(self, full_name: str, birthday: str) -> str:
-        """Process a single record and return formatted phone numbers."""
+        """Process a single record with enhanced logging."""
         try:
             lastname, firstname, middlename = full_name.strip().split()
         except ValueError:
+            logger.warning(f"Invalid name format: {full_name}")
             return "Ошибка: неверный формат ФИО"
+
+        logger.debug(
+            f"Processing record: {lastname} {firstname} {middlename} {birthday}"
+        )
 
         # Try database first
         if base_response := await self.get_from_database(
@@ -125,22 +135,29 @@ class NumberScript(Script):
             self.database_hit_count += 1
             if phones := await self.extract_phones_from_response(base_response):
                 return self._format_phones(phones)
+            return "Телефоны не найдены."
+        else:
+            logger.debug("Not found in database, querying API")
 
         # Fallback to API
         response_data = await self.fetch_himera_response(
             lastname, firstname, middlename, birthday
         )
         if "error" in response_data:
+            logger.error(f"API error: {response_data['error']}")
             return f"Error: {response_data['error']}"
 
-        # Cache the result
-        await self.add_to_database(
-            lastname, firstname, middlename, birthday, response_data
+        logger.debug("Caching API response in database")
+        asyncio.create_task(
+            self.add_to_database(
+                lastname, firstname, middlename, birthday, response_data
+            )
         )
-        self.database_hit_count += 1
 
         if phones := await self.extract_phones_from_response(response_data):
             return self._format_phones(phones)
+
+        logger.debug("No phones found")
         return "Телефоны не найдены."
 
     def _format_phones(self, phones: Set[str]) -> str:
@@ -159,7 +176,7 @@ class NumberScript(Script):
 
                 processed_content = await self.process_file_content(content)
 
-                async with aioopen(file_path, "w", encoding="utf-8") as f:
+                async with aioopen(f"_{file_path}", "w", encoding="utf-8") as f:
                     await f.write(processed_content)
 
                 return processed_content
@@ -206,7 +223,7 @@ class NumberScript(Script):
     async def get_from_database(
         self, lastname: str, firstname: str, middlename: str, birthday: str
     ) -> Optional[Dict]:
-        """Retrieve data from local database."""
+        """Retrieve data from local database with improved logging."""
         payload = {
             "last_name": lastname,
             "first_name": firstname,
@@ -215,16 +232,28 @@ class NumberScript(Script):
         }
 
         try:
-            async with self.rate_limiter:
+            async with self.get_semaphore:
+                finance_id = self._generate_record_id(
+                    lastname, firstname, middlename, birthday
+                )
                 response = await self.server_client.post(
-                    "http://127.0.0.1:8000/get_finance", json=payload
+                    f"http://127.0.0.1:8000/get_finance/{finance_id}",
+                    json=payload,
                 )
 
                 if response.status_code == 200:
-                    return response.json().get("finance")
-                logger.warning(f"Database error: status {response.status_code}")
+                    data = response.json()
+                    if finance_data := data.get("finance"):
+                        return finance_data
+                    logger.warning(f"{payload}")
+                else:
+                    logger.warning(
+                        f"Database error: status {response.status_code}, response: {response.text}"
+                    )
+        except PoolTimeout as e:
+            raise DatabaseException(e)
         except Exception as e:
-            logger.warning(f"Database error: {repr(e)}")
+            logger.error(f"Database request failed: {repr(e)}")
         return None
 
     async def add_to_database(
@@ -235,9 +264,12 @@ class NumberScript(Script):
         birthday: str,
         response_data: Dict,
     ) -> None:
-        """Add data to local database."""
+        """Add data to local database with required ID field."""
+        # Генерируем уникальный ID на основе ФИО и даты рождения
+        record_id = self._generate_record_id(lastname, firstname, middlename, birthday)
+
         finance_full = {
-            "id": None,
+            "id": record_id,
             "last_name": lastname,
             "first_name": firstname,
             "middle_name": middlename,
@@ -246,15 +278,41 @@ class NumberScript(Script):
         }
 
         try:
-            async with self.rate_limiter:
+            async with self.add_semaphore:
                 response = await self.server_client.post(
-                    "http://127.0.0.1:8000/add_finance",
-                    json=finance_full,
+                    "http://127.0.0.1:8000/add_finance", json=finance_full, timeout=10.0
                 )
-                if response.status_code != 200:
-                    logger.error(f"Database add error: {response.text}")
+
+                if response.status_code == 200:
+                    logger.debug("Successfully added to database")
+                else:
+                    logger.error(
+                        f"Database add error: {response.status_code}, response: {response.text}"
+                    )
         except Exception as e:
-            logger.error(f"Database error: {repr(e)}")
+            logger.error(f"Database add failed: {repr(e)}")
+
+    def _generate_record_id(
+        self, lastname: str, firstname: str, middlename: str, birthday: str
+    ) -> str:
+        """Generate consistent unique ID based on personal data."""
+        from hashlib import sha256
+        import json
+
+        # Создаем строку для хеширования
+        data_str = json.dumps(
+            {
+                "last_name": lastname.lower().strip(),
+                "first_name": firstname.lower().strip(),
+                "middle_name": middlename.lower().strip(),
+                "birthday": birthday.strip(),
+            },
+            sort_keys=True,
+            ensure_ascii=False,
+        )
+
+        # Генерируем SHA256 хеш
+        return sha256(data_str.encode("utf-8")).hexdigest()
 
     @override
     class Result(BaseModel):

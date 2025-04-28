@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    DEVELOPMENT: bool = False
+    DEVELOPMENT: bool = True
     NGROK_AUTHTOKEN: SecretStr
     PORT: int
 

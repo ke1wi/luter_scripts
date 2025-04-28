@@ -6,6 +6,7 @@ import os
 from app.scripts.number_script import NumberScript
 import httpx
 from typing import Optional
+from app.exceptions.database import DatabaseException
 
 
 async def document(message: Message, file: Document):
@@ -40,6 +41,8 @@ async def document(message: Message, file: Document):
             await message.answer(
                 "⚠️ Ошибка подключения к сервису обработки. Попробуйте позже."
             )
+        except DatabaseException:
+            await message.answer("❌ Ошибка с базой даных.")
             return
         except Exception as e:
             logger.error(f"Processing error: {e}")
