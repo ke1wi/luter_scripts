@@ -41,6 +41,7 @@ async def document(message: Message, file: Document):
             await message.answer(
                 "⚠️ Ошибка подключения к сервису обработки. Попробуйте позже."
             )
+            return
         except DatabaseException:
             await message.answer("❌ Ошибка с базой даных.")
             return
@@ -72,6 +73,6 @@ async def document(message: Message, file: Document):
 
         # Удаление сообщения о обработке
         try:
-            await processing_msg.delete()
+            return await processing_msg.delete()
         except:
             pass

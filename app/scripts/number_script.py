@@ -171,12 +171,12 @@ class NumberScript(Script):
                 return "Ошибка авторизации в API"
 
             try:
-                async with aioopen(file_path, "r", encoding="utf-8") as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     content = await f.read()
 
                 processed_content = await self.process_file_content(content)
 
-                async with aioopen(f"{file_path}", "w", encoding="utf-8") as f:
+                with open(file_path, "w", encoding="utf-8") as f:
                     await f.write(processed_content)
 
                 return processed_content
