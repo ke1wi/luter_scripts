@@ -176,7 +176,7 @@ class NumberScript(Script):
 
                 processed_content = await self.process_file_content(content)
 
-                async with aioopen(f"_{file_path}", "w", encoding="utf-8") as f:
+                async with aioopen(f"{file_path}", "w", encoding="utf-8") as f:
                     await f.write(processed_content)
 
                 return processed_content
