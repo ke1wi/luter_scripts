@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     DEVELOPMENT: bool = False
     NGROK_AUTHTOKEN: SecretStr
+    PORT: int
 
     TOKEN: SecretStr
     ADMIN_IDS: list[int]
