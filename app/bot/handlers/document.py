@@ -31,11 +31,10 @@ async def document(message: Message, file: Document):
             temp_file_path = temp_file.name
             await message.bot.download_file(file_path, temp_file.name)
 
-
         # Обработка файла
         try:
-            result = await NumberScript().run(temp_file_path)
             logger.info("Running script...")
+            result = await NumberScript().run(temp_file_path)
         except httpx.HTTPError as e:
             logger.error(f"API error: {e}")
             await message.answer(
