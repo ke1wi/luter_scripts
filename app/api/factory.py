@@ -37,7 +37,7 @@ def create_app(bot: Bot, dispatcher: Dispatcher, webhook_secret: str) -> FastAPI
                 sys.argv[sys.argv.index("--port") + 1] if "--port" in sys.argv else 8001
             )
             ngrok.set_auth_token(
-                settings.NGROK_AUTHTOKEN.get_secret_value(8001)
+                settings.NGROK_AUTHTOKEN.get_secret_value()
                 if settings.NGROK_AUTHTOKEN
                 else None
             )  # type: ignore
