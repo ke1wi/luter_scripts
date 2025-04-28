@@ -1,17 +1,18 @@
-from datetime import datetime, timedelta, timezone
 import asyncio
+import re
+from contextlib import asynccontextmanager
+from datetime import datetime, timedelta, timezone
+from typing import Dict, Optional, Set, override
+
+import httpx
+from aiolimiter import AsyncLimiter
+from httpx import PoolTimeout
+from loguru import logger
+from pydantic import BaseModel
+
+from app.exceptions.database import DatabaseException
 from app.scripts.script import Script
 from app.settings import settings
-import httpx
-import re
-from aiolimiter import AsyncLimiter
-from typing import override, Optional, Set, Dict
-from pydantic import BaseModel
-from loguru import logger
-from contextlib import asynccontextmanager
-from aiofiles import open as aioopen
-from app.exceptions.database import DatabaseException
-from httpx import PoolTimeout
 
 
 class NumberScript(Script):
@@ -296,8 +297,8 @@ class NumberScript(Script):
         self, lastname: str, firstname: str, middlename: str, birthday: str
     ) -> str:
         """Generate consistent unique ID based on personal data."""
-        from hashlib import sha256
         import json
+        from hashlib import sha256
 
         # Создаем строку для хеширования
         data_str = json.dumps(

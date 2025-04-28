@@ -1,9 +1,9 @@
-import sys
 from typing import Any
 
 from aiogram import Bot, Dispatcher
 from fastapi import FastAPI
 from pydantic import HttpUrl
+
 from app.api.routes.webhook import webhook_router
 from app.api.stubs import BotStub, DispatcherStub, SecretStub
 from app.settings import settings
@@ -34,9 +34,7 @@ def create_app(bot: Bot, dispatcher: Dispatcher, webhook_secret: str) -> FastAPI
             from ngrok import ngrok
 
             ngrok.set_auth_token(
-                settings.NGROK_AUTHTOKEN.get_secret_value()
-                if settings.NGROK_AUTHTOKEN
-                else None
+                settings.NGROK_AUTHTOKEN.get_secret_value() if settings.NGROK_AUTHTOKEN else None
             )  # type: ignore
             tunnel = await ngrok.connect(settings.PORT)  # type: ignore[misc]
             public_url = tunnel.url()

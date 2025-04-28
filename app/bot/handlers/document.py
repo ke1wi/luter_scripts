@@ -1,16 +1,20 @@
-from aiogram.types import Message, Document
-from aiogram.types.input_file import FSInputFile
-from tempfile import NamedTemporaryFile
-from loguru import logger
 import os
-from app.scripts.number_script import NumberScript
-import httpx
+from tempfile import NamedTemporaryFile
 from typing import Optional
+
+import httpx
+from aiogram.types import Document, Message
+from aiogram.types.input_file import FSInputFile
+from loguru import logger
+
 from app.exceptions.database import DatabaseException
+from app.scripts.number_script import NumberScript
 
 
 async def document(message: Message, file: Document):
     """Обработчик текстовых файлов для извлечения данных"""
+    if message.from_user.id == message.bot.id:
+        return
     if not file.file_name.endswith(".txt"):
         await message.answer("Пожалуйста, отправьте файл в формате .txt")
         return
@@ -73,8 +77,5 @@ async def document(message: Message, file: Document):
             except Exception as e:
                 logger.warning(f"Failed to delete temp file: {e}")
 
-        # Удаление сообщения о обработке
-        try:
-            return await processing_msg.delete()
-        except:
-            pass
+            # Удаление сообщения о обработке
+    return await processing_msg.delete()

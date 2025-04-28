@@ -2,9 +2,9 @@ from typing import Union
 
 from aiogram.filters import Filter
 from aiogram.types import CallbackQuery, Message
+from loguru import logger
 
 from app.settings import settings
-from loguru import logger
 
 
 class AdminFilter(Filter):

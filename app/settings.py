@@ -1,6 +1,4 @@
-from typing import Optional
-
-from pydantic import SecretStr, HttpUrl
+from pydantic import HttpUrl, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,9 +16,7 @@ class Settings(BaseSettings):
     HIMERA_USERNAME: SecretStr = "cahase3500@hupoi.com"
     HIMERA_PASSWORD: SecretStr = "gcxT79fFI^Fc5zfK"
     API_AUTH_URL: str = "https://himera-search.biz/api/v2/rest/auth/login"
-    API_FINANCE_URL: str = (
-        "https://himera-search.biz/closed-data/getFinanceDataByFioDob"
-    )
+    API_FINANCE_URL: str = "https://himera-search.biz/closed-data/getFinanceDataByFioDob"
 
     MONGO_URI: str
     MONGO_DB_NAME: str
@@ -30,9 +26,7 @@ class Settings(BaseSettings):
     def WEBHOOK_URL(self) -> str:
         return f"{self.BASE_URL}{self.WEBHOOK_PATH}"
 
-    model_config = SettingsConfigDict(
-        env_file=(".env", "stack.env"), env_file_encoding="utf-8", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=(".env", "stack.env"), env_file_encoding="utf-8", extra="ignore")
 
 
 settings = Settings()  # ignore: [call-arg]

@@ -1,12 +1,10 @@
 from aiogram import Router
-from app.bot.filters.document import DocumentFilter
-from app.bot.filters.admin import AdminFilter
-from app.bot.handlers.start import start
-
 from aiogram.filters import CommandStart
 
-from app.bot.handlers.start import start
+from app.bot.filters.admin import AdminFilter
+from app.bot.filters.document import DocumentFilter
 from app.bot.handlers.document import document
+from app.bot.handlers.start import start
 
 router = Router(name=__name__)
 

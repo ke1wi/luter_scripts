@@ -1,7 +1,8 @@
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.fsm.storage.memory import SimpleEventIsolation, MemoryStorage
+from aiogram.fsm.storage.memory import MemoryStorage, SimpleEventIsolation
+
 from app.bot.handlers import router as document_router
 from app.settings import settings
 

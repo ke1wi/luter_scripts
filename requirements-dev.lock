@@ -31,11 +31,13 @@ anyio==4.9.0
     # via watchfiles
 attrs==25.3.0
     # via aiohttp
+black==25.1.0
 certifi==2025.1.31
     # via aiogram
     # via httpcore
     # via httpx
 click==8.1.8
+    # via black
     # via rich-toolkit
     # via typer
     # via uvicorn
@@ -86,8 +88,18 @@ mdurl==0.1.2
 multidict==6.4.3
     # via aiohttp
     # via yarl
+mypy==1.15.0
+mypy-extensions==1.1.0
+    # via black
+    # via mypy
 ngrok==1.4.0
     # via scripts
+packaging==25.0
+    # via black
+pathspec==0.12.1
+    # via black
+platformdirs==4.3.7
+    # via black
 propcache==0.3.1
     # via aiohttp
     # via yarl
@@ -114,6 +126,7 @@ rich==14.0.0
     # via typer
 rich-toolkit==0.14.3
     # via fastapi-cli
+ruff==0.11.7
 shellingham==1.5.4
     # via typer
 sniffio==1.3.1
@@ -128,6 +141,7 @@ typing-extensions==4.13.2
     # via aiogram
     # via anyio
     # via fastapi
+    # via mypy
     # via pydantic
     # via pydantic-core
     # via rich-toolkit
