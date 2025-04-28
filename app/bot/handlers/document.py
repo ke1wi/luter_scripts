@@ -19,6 +19,7 @@ async def document(message: Message, file: Document):
     try:
         # Уведомление пользователя
         processing_msg = await message.answer("⏳ Начинаю обработку файла...")
+        logger.info("Processing file...")
 
         # Скачивание файла
         document = await message.bot.get_file(file.file_id)
@@ -26,12 +27,15 @@ async def document(message: Message, file: Document):
 
         # Создание временного файла
         with NamedTemporaryFile(mode="w+b", delete=False, suffix=".txt") as temp_file:
+            logger.info("Creating temp...")
             temp_file_path = temp_file.name
             await message.bot.download_file(file_path, temp_file.name)
+
 
         # Обработка файла
         try:
             result = await NumberScript().run(temp_file_path)
+            logger.info("Running script...")
         except httpx.HTTPError as e:
             logger.error(f"API error: {e}")
             await message.answer(

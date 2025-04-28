@@ -87,7 +87,8 @@ class NumberScript(Script):
                         headers=headers,
                         json=payload,
                     )
-                    self.himera_request_count += 1  # Increment Himera request counter
+                    self.himera_request_count += 1
+                    logger.debug("Himera API request")  # Increment Himera request counter
                     if response.status_code == 200:
                         return response.json()
             except Exception:
